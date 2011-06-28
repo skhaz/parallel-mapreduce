@@ -27,19 +27,28 @@ typedef boost::unordered_multimap<
 	boost::fast_pool_allocator<std::pair<fast_string, std::size_t> >
 > fast_unorderedmap;
 
-class worker
+class mmap_worker
 {
 	public:
-		worker() { }
-
-		worker(mmap_size_t start, mmap_size_t size, const boost::iostreams::mapped_file_source& source)
-		{
-		}
+		mmap_worker(mmap_size_t start, mmap_size_t size, const boost::iostreams::mapped_file_source& source)
+		: _start(start)
+		, _size(size)
+		, _source(source)
+		{ }
 
 		void run()
 		{
-			std::cout << "foobar " << std::endl;
+			std::cout
+			<< "Start " << _start << std::endl
+			<< "Size " << _size << std::endl
+			<< "Content " << std::count(_source.begin(), _source.end(), '\n') << std::endl // I know...
+			<< std::endl;
 		}
+
+	private:
+		mmap_size_t _start;
+		mmap_size_t _size;
+		boost::iostreams::mapped_file_source _source;
 };
 
 int main(int argc, char** argv)
@@ -59,8 +68,10 @@ int main(int argc, char** argv)
 
 		for (int i = num_threads; i--;)
 		{
-			boost::shared_ptr<worker> w(new worker(piece_size * i, piece_size, source));
-			threads.push_back(thread_ptr(new boost::thread(boost::bind(&worker::run, w))));
+			threads.push_back(thread_ptr(new boost::thread(
+				boost::bind(&mmap_worker::run,
+				boost::shared_ptr<mmap_worker>(
+					new mmap_worker(piece_size * i, (i == 0 ? piece_size + rest_size : piece_size), source))))));
 		}
 
 		std::for_each(threads.begin(), threads.end(), bind(&boost::thread::join, _1));
