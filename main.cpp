@@ -41,7 +41,7 @@ class mmap_worker
 			std::cout
 			<< "Start " << _start << std::endl
 			<< "Size " << _size << std::endl
-			<< "Content " << std::count(_source.begin(), _source.end(), '\n') << std::endl // I know...
+			<< "Lines in block " << std::count(_source.begin(), _source.end(), '\n') << std::endl // I know...
 			<< std::endl;
 		}
 
